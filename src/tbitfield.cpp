@@ -11,21 +11,26 @@
 static const int FAKE_INT = -1;
 static TBitField FAKE_BITFIELD(1);
 
-// {47|46|...|33|32} {31|30|...|17|16} {15|14|...|1|0}
+// {47|46|...|33|32} {31|30|...|17|16} {15|14|...|1|0}    !!!
 //      pMem[0]           pMem[1]           pMem[2]
 //
 // or
 //
-// {15|14|...|1|0} {31|30|...|17|16} {47|46|...|33|32}
+// {15|14|...|1|0} {31|30|...|17|16} {47|46|...|33|32} 1
 //      pMem[0]         pMem[1]           pMem[2]
 //
 //
 // n-ый бит 0<=n<=15 или 0<=n<=47
+//             !            1
+
+const int uibit = 32;
+const int ui2bit = 5; // степень 2 - количество бит в элементе типа unsigned int (int)
+const int uibyte = 4; // количество байт в элементе типа unsigned int (int)
 
 TBitField::TBitField(int len)
 {
     BitLen = len;
-    MemLen = len >> 4;
+    MemLen = len >> uibyte;
     MemLen++;
     pMem = new TELEM [MemLen];
 }
@@ -48,12 +53,12 @@ TBitField::~TBitField()
 
 int TBitField::GetMemIndex(const int n) const // индекс Мем для бита n
 {
-    return n >> 4;
+    return n >> ui2bit;   //разделить на 2^uibit
 }
 
 TELEM TBitField::GetMemMask(const int n) const // битовая маска для бита n
 {
-    return 1 << (n & (1 << 4 - 1));    //return 1 << (n%16);
+    return 1 << (n & (uibit - 1));    //return 1 << (n%(uibit-1));
 }
 
 // доступ к битам битового поля
@@ -65,16 +70,22 @@ int TBitField::GetLength(void) const // получить длину (к-во б�
 
 void TBitField::SetBit(const int n) // установить бит
 {
+    if (n >= BitLen || n < 0)
+        throw out_of_range("out of range");
     pMem[GetMemIndex(n)] |= GetMemMask(n);
 }
 
 void TBitField::ClrBit(const int n) // очистить бит
 {
+    if (n >= BitLen || n < 0)
+        throw out_of_range("out of range");
     pMem[GetMemIndex(n)] &= ~GetMemMask(n);
 }
 
 int TBitField::GetBit(const int n) const // получить значение бита
 {
+    if (n >= BitLen || n < 0)
+        throw out_of_range("out of range");
     return pMem[GetMemIndex(n)] & GetMemMask(n);
 }
 
@@ -82,42 +93,79 @@ int TBitField::GetBit(const int n) const // получить значение б
 
 TBitField& TBitField::operator=(const TBitField &bf) // присваивание
 {
-    return FAKE_BITFIELD;
+    BitLen = bf.BitLen;
+    TELEM *p = new TELEM[bf.MemLen];
+    MemLen = bf.MemLen;
+    delete[] pMem;
+    pMem = p;
+    return *this;
 }
 
 int TBitField::operator==(const TBitField &bf) const // сравнение
 {
-  return FAKE_INT;
+    if (BitLen != bf.BitLen)
+        return false;
+    for (int i = 0; i < MemLen; i++)
+        if (pMem[i] != bf.pMem[i])
+            return false;
+    return true;
 }
 
 int TBitField::operator!=(const TBitField &bf) const // сравнение
 {
-  return FAKE_INT;
+    return !(*this == bf);
 }
 
 TBitField TBitField::operator|(const TBitField &bf) // операция "или"
 {
     return FAKE_BITFIELD;
+    if (BitLen != bf.BitLen)
+        throw length_error("different sizes");
+    TBitField tmp(*this);
+    for (int i = 0; i < bf.BitLen; i++)
+        tmp.pMem[i] |= bf.pMem[i];
+    return tmp;
 }
 
 TBitField TBitField::operator&(const TBitField &bf) // операция "и"
 {
     return FAKE_BITFIELD;
+    if (BitLen != bf.BitLen)
+        throw length_error("different sizes");
+    TBitField tmp(*this);
+    for (int i = 0; i < bf.BitLen; i++)
+        tmp.pMem[i] &= bf.pMem[i];
+    return tmp;
 }
 
 TBitField TBitField::operator~(void) // отрицание
 {
     return FAKE_BITFIELD;
+    TBitField tmp(BitLen);
+    for (int i = 0; i < BitLen; i++)
+        tmp.pMem[i] = ~pMem[i];
+    return tmp;
 }
 
 // ввод/вывод
 
 istream &operator>>(istream &istr, TBitField &bf) // ввод
 {
+    int len;
+    istr >> len;
+    TBitField tmp(len);
+    bf = tmp;
     return istr;
 }
 
 ostream &operator<<(ostream &ostr, const TBitField &bf) // вывод
 {
+    int s = bf.GetLength();
+    for (int i = 0; i < s; i++) {
+        if (bf.GetBit(i))
+            ostr << '1';
+        else
+            ostr << '0';
+    }
     return ostr;
 }
