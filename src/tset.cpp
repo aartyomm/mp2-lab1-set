@@ -67,7 +67,8 @@ int TSet::operator==(const TSet &s) const // сравнение
 
 int TSet::operator!=(const TSet &s) const // сравнение
 {
-    return !(*this == s);
+    //return (*this == s);
+    return !(*this == s); //???
 }
 
 TSet TSet::operator+(const TSet &s) // объединение
@@ -95,6 +96,7 @@ TSet TSet::operator*(const TSet &s) // пересечение
     if (MaxPower != s.MaxPower)
         throw length_error("different sizes");
     TSet tmp(BitField & s.BitField);
+    return tmp;
 }
 
 TSet TSet::operator~(void) // дополнение
