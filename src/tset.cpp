@@ -69,7 +69,6 @@ int TSet::operator==(const TSet &s) const // сравнение
 
 int TSet::operator!=(const TSet &s) const // сравнение
 {
-    //return (*this == s);
     return !(*this == s);
 }
 
@@ -104,7 +103,7 @@ TSet TSet::operator*(const TSet &s) // пересечение
 TSet TSet::operator~(void) // дополнение
 {
     TSet tmp(*this);
-    BitField = ~BitField;
+    tmp.BitField = ~BitField;
     return tmp;
 }
 
@@ -123,8 +122,8 @@ ostream& operator<<(ostream &ostr, const TSet &s) // вывод
     for (int i = 0; i < n; i++) {
         if (s.IsMember(i)) {
             ostr << c << ' ' << i;
+            c = ',';
         }
-        c = ',';
     }
     ostr << " }";
     return ostr;
