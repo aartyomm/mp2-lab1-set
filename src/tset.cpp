@@ -15,10 +15,7 @@ static TSet FAKE_SET(1);
 TSet::TSet(int mp) : MaxPower(mp), BitField(mp){}
 
 // конструктор копирования
-TSet::TSet(const TSet& s) : BitField(-1) {
-    //MaxPower = s.MaxPower;
-    //BitField = s.BitField;
-}
+TSet::TSet(const TSet& s) : MaxPower(s.MaxPower), BitField(s.BitField){}
 
 // конструктор преобразования типа
 TSet::TSet(const TBitField &bf) : MaxPower(bf.GetLength()), BitField(bf){}
@@ -57,7 +54,12 @@ void TSet::DelElem(const int Elem) // исключение элемента мн
 
 TSet& TSet::operator=(const TSet &s) // присваивание
 {
-    return FAKE_SET;
+    //return FAKE_SET;
+    if (this == &s)
+        return *this;
+    MaxPower = s.MaxPower;
+    BitField = s.BitField;
+    return *this;
 }
 
 int TSet::operator==(const TSet &s) const // сравнение
@@ -68,12 +70,14 @@ int TSet::operator==(const TSet &s) const // сравнение
 int TSet::operator!=(const TSet &s) const // сравнение
 {
     //return (*this == s);
-    return !(*this == s); //???
+    return !(*this == s);
 }
 
 TSet TSet::operator+(const TSet &s) // объединение
 {
-    return FAKE_SET;
+    //return FAKE_SET;
+    TSet tmp(BitField | s.BitField);
+    return tmp;
 }
 
 TSet TSet::operator+(const int Elem) // объединение с элементом
@@ -92,9 +96,7 @@ TSet TSet::operator-(const int Elem) // разность с элементом
 
 TSet TSet::operator*(const TSet &s) // пересечение
 {
-    return FAKE_SET;
-    if (MaxPower != s.MaxPower)
-        throw length_error("different sizes");
+    //return FAKE_SET;
     TSet tmp(BitField & s.BitField);
     return tmp;
 }
